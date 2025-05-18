@@ -10,10 +10,10 @@ from baml_py import Collector
 import uuid
 
 
-def init_cr():
+def init_cr(LLM_CR="Gemini_1_5_pro"):
     # Initialize baml client registry.
     cr = ClientRegistry()
-    cr.set_primary("Gemini_2_0_pro")
+    cr.set_primary(LLM_CR)
     return cr
 
 
@@ -49,18 +49,17 @@ def image_to_base64(image):
     return Image.from_base64("image/png", base64_string)
 
 
-def llm_predict_images(images):
-    cr = init_cr()
+def llm_predict_images(cr, images):
     images_base64 = [image_to_base64(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)) for image in images]
     llm_results, tokens = llm_extract_image(images_base64=images_base64, client_registry=cr)
     return llm_results, tokens
 
 
-def llm_predict(uuid, files_name, images=None):
+def llm_predict(uuid, files_name, cr, images=None):
 
     results, llm_results, tokens = [], None, [0, 0]
     try:
-        llm_results, tokens = llm_predict_images(images)
+        llm_results, tokens = llm_predict_images(cr, images)
 
         results.append({
             "file_name": os.path.basename(files_name),
@@ -82,11 +81,11 @@ def llm_predict(uuid, files_name, images=None):
 
 
 if __name__ == "__main__":
-    
+    cr = init_cr(LLM_CR="Gemini_2_0_pro")
     uid = uuid.uuid1()
-    file_name = "images/3.png"
+    file_name = "images/1.jpg"
     image = cv2.imread(file_name)
     
-    results = llm_predict(uuid=str(uid), files_name=file_name, images=[image])
+    results = llm_predict(uuid=str(uid), files_name=file_name, images=[image], cr=cr)
     print("results >>> ", results)
     pass
